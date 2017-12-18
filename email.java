@@ -41,9 +41,6 @@ class Email {
      * @return The email addresses.
      */
     private static List<String> parseLines(List<String> lines) {
-        // Email addresses follow complex formats that are hard and slow to find and validate correctly (see RFC 5322).
-        // For now we use a wildly simplified regular expression for finding addresses.
-        Pattern pattern = Pattern.compile("[a-zA-Z.-_]+@[a-zA-Z.-_]+");
         List<String> emailAddresses = new ArrayList<String>();
         for (String line: lines) {
             for (String emailAddress: parse(line)) {
