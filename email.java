@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Compares email addresses by hostname.
@@ -40,18 +41,13 @@ class Email {
      *
      * @return The email addresses.
      */
-    private static List<String> parseLines(List<String> lines) {
-        List<String> emailAddresses = new ArrayList<String>();
-        for (String line: lines) {
-            for (String emailAddress: parse(line)) {
-                emailAddresses.add(emailAddress);
-
-            }
-        }
-
-        Collections.sort(emailAddresses, new EmailAddressComparator());
-
-        return emailAddresses;
+    private static Stream<String> parseLines(Stream<String> lines) {
+        return lines.map(Email::parse)
+                // Flatten Stream<Stream<String>> to Stream<String>.
+                .reduce((a, b) -> Stream.concat(a, b))
+                // Provide a default value.
+                .orElse(Stream.<String>empty())
+                .sorted(new EmailAddressComparator());
     }
 
     /**
@@ -61,15 +57,15 @@ class Email {
      *
      * @return The email addresses.
      */
-    private static List<String> parse(String line) {
+    private static Stream<String> parse(String line) {
         List<String> emailAddresses = new ArrayList<String>();
         Matcher matcher = pattern.matcher(line);
         while (matcher.find()) {
             emailAddresses.add(matcher.group());
-
         }
 
-        return emailAddresses;
+        // The regex package did not receive stream support until Java 1.9, and we support 1.8, so convert manually.
+        return emailAddresses.stream();
     }
 
     public static void main(String[] args) {
@@ -79,11 +75,9 @@ class Email {
         }
         String sourceFilePath = args[0];
         try {
-            List<String> lines = Files.readAllLines(Paths.get(sourceFilePath).toAbsolutePath());
             System.out.println(String.format("Parsing %s...", sourceFilePath));
-            for (String emailAddress: parseLines(lines)) {
-                System.out.println(emailAddress);
-            }
+            Stream<String> lines = Files.lines(Paths.get(sourceFilePath).toAbsolutePath());
+            parseLines(lines).forEach(System.out::println);
         }
         catch (IOException e) {
             System.out.println(String.format("Could not read source file '%s': %s", sourceFilePath, e.getMessage()));
