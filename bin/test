@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+javac email.java
+ACTUAL=$(java Email ./source.txt)
+if [ $? -ne 0 ]
+then
+    echo $ACTUAL
+    exit 1
+fi
+EXPECTED="Parsing ./source.txt...
+id@example.com
+sed.imperdiet@localhost"
+if [ "$EXPECTED" == "$ACTUAL" ]
+then
+    echo "SUCCESS: All tests passed."
+    exit
+else
+    echo "ERROR: Some tests failed: '$ACTUAL' is not equal to expected '$EXPECTED'"
+    exit 2
+fi
