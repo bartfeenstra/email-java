@@ -8,31 +8,69 @@ import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Compares email addresses by hostname.
+ */
+class EmailAddressComparator implements Comparator<String> {
+    @Override
+    public int compare(String a, String b) {
+        String aHost = a.substring(a.lastIndexOf("@"));
+        String bHost = b.substring(b.lastIndexOf("@"));
+        return a.compareTo(b);
+    }
+}
+
+/**
+ * Harvests emali adresses from text files.
+ */
 class Email {
 
-    private static List<String> parse(List<String> lines) {
+    /**
+     * The regular expression to match an email address in a larger text.
+     *
+     * Email addresses follow complex formats that are hard and slow to find and validate correctly (see RFC 5322). For
+     * now we use a wildly simplified regular expression for finding addresses.
+     */
+    private static Pattern pattern = Pattern.compile("[a-zA-Z.-_]+@[a-zA-Z.-_]+");
+
+    /**
+     * Parses multiple source lines and returns the email addresses.
+     *
+     * @param lines The source lines.
+     *
+     * @return The email addresses.
+     */
+    private static List<String> parseLines(List<String> lines) {
         // Email addresses follow complex formats that are hard and slow to find and validate correctly (see RFC 5322).
         // For now we use a wildly simplified regular expression for finding addresses.
         Pattern pattern = Pattern.compile("[a-zA-Z.-_]+@[a-zA-Z.-_]+");
         List<String> emailAddresses = new ArrayList<String>();
         for (String line: lines) {
-            Matcher matcher = pattern.matcher(line);
-            while (matcher.find()) {
-                emailAddresses.add(matcher.group());
+            for (String emailAddress: parse(line)) {
+                emailAddresses.add(emailAddress);
 
             }
         }
 
-        // Sort the addresses by host.
-        Comparator<String> emailAddressComparator = new Comparator<String>() {
-            @Override
-            public int compare(String a, String b) {
-                String aHost = a.substring(a.lastIndexOf("@"));
-                String bHost = b.substring(b.lastIndexOf("@"));
-                return a.compareTo(b);
-            }
-        };
-        Collections.sort(emailAddresses, emailAddressComparator);
+        Collections.sort(emailAddresses, new EmailAddressComparator());
+
+        return emailAddresses;
+    }
+
+    /**
+     * Parses a line and returns the email addresses.
+     *
+     * @param line The source line.
+     *
+     * @return The email addresses.
+     */
+    private static List<String> parse(String line) {
+        List<String> emailAddresses = new ArrayList<String>();
+        Matcher matcher = pattern.matcher(line);
+        while (matcher.find()) {
+            emailAddresses.add(matcher.group());
+
+        }
 
         return emailAddresses;
     }
@@ -46,8 +84,7 @@ class Email {
         try {
             List<String> lines = Files.readAllLines(Paths.get(sourceFilePath).toAbsolutePath());
             System.out.println(String.format("Parsing %s...", sourceFilePath));
-            List<String> emailAddresses = parse(lines);
-            for (String emailAddress: emailAddresses) {
+            for (String emailAddress: parseLines(lines)) {
                 System.out.println(emailAddress);
             }
         }
