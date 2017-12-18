@@ -22,7 +22,7 @@ class EmailAddressComparator implements Comparator<String> {
 }
 
 /**
- * Harvests emali adresses from text files.
+ * Harvests email adresses from text files.
  */
 class Email {
 
