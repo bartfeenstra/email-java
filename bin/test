@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-javac email.java
+cd `dirname "$0"`/..
+./bin/build
 ACTUAL=$(java Email ./source.txt)
 if [ $? -ne 0 ]
 then
